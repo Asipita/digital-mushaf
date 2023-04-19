@@ -1,4 +1,5 @@
 import axiosInstance from '@/api'
+import { convertToArabic } from '@/utils'
 
 interface Verse {
   id: number
@@ -69,14 +70,11 @@ export default function Chapter({ chapter }: { chapter: ChapterByVerse }) {
         lang="ar"
       >
         {verses.map((verse) => (
-          <div
-            key={verse.id}
-            className="flex justify-center flex-row-reverse items-center gap-2 p-2 border-b"
-          >
-            <span className="border p-2 rounded-full">
-              {verse.verse_number}
+          <div key={verse.id} className="flex items-center gap-2 p-2 border-b">
+            <span className="text-lg">{verse.text_uthmani}</span>
+            <span className="border p-2 rounded-full bg-slate-200 text-gray-500">
+              {convertToArabic(verse.verse_number)}
             </span>
-            <span className="text-lg text-center">{verse.text_uthmani}</span>
           </div>
         ))}
       </section>
