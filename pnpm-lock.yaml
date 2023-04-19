@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@asipita/number-to-arabic':
+    specifier: ^1.1.1
+    version: 1.1.1
   '@types/node':
     specifier: 18.15.11
     version: 18.15.11
@@ -42,6 +45,13 @@ dependencies:
     version: 5.0.4
 
 packages:
+
+  /@asipita/number-to-arabic@1.1.1:
+    resolution: {integrity: sha512-HqMLlFhzmj/SY3Sa2vj9RMO4+AQbrNlXFYjoKmWAhyVK2+RvPWHanVZfHdVjGk4NAifWSQB5tIxTHNQ205mjJQ==}
+    dependencies:
+      tsc: 2.0.4
+      typescript: 5.0.4
+    dev: false
 
   /@babel/runtime@7.21.0:
     resolution: {integrity: sha512-xwII0//EObnq89Ji5AKYQaRYiW/nZ3llSv29d49IuxPhKbtJoLP+9QUUZ4nVragQVtaVGeZrpB+ZtG/Pdy/POw==}
@@ -2471,6 +2481,11 @@ packages:
 
   /ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
+    dev: false
+
+  /tsc@2.0.4:
+    resolution: {integrity: sha512-fzoSieZI5KKJVBYGvwbVZs/J5za84f2lSTLPYf6AGiIf43tZ3GNrI1QzTLcjtyDDP4aLxd46RTZq1nQxe7+k5Q==}
+    hasBin: true
     dev: false
 
   /tsconfig-paths@3.14.2:

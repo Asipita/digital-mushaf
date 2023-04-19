@@ -1,5 +1,5 @@
 import axiosInstance from '@/api'
-import { convertToArabic } from '@/utils'
+import {convertToArabic} from '@asipita/number-to-arabic'
 
 interface Verse {
   id: number
