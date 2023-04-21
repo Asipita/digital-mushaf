@@ -1,64 +1,8 @@
 import axiosInstance from '@/api'
+import { ChapterByVerse } from '@/schema/interfaces'
 import {convertToArabic} from '@asipita/number-to-arabic'
 
-interface Verse {
-  id: number
-  chapter_id: number
-  verse_number: number
-  verse_key: string
-  verse_index: number
-  text_uthmani: string
-  text_uthmani_simple: string
-  text_imlaei: string
-  text_imlaei_simple: string
-  text_indopak: string
-  text_uthmani_tajweed: string
-  juz_number: number
-  hizb_number: number
-  rub_number: number
-  sajdah_type: null
-  sajdah_number: null
-  page_number: number
-  image_url: string
-  image_width: number
-  words: Word[]
-}
 
-interface Word {
-  id: number
-  position: number
-  text_uthmani: string
-  text_indopak: string
-  text_imlaei: string
-  verse_key: string
-  page_number: number
-  line_number: number
-  audio_url: string
-  location: string
-  char_type_name: string
-  code_v1: string
-  translation: {
-    text: string
-    language_name: string
-  }
-  transliteration: {
-    text: string
-    language_name: string
-  }
-}
-
-interface Pagination {
-  per_page: number
-  current_page: number
-  next_page: number
-  total_pages: number
-  total_records: number
-}
-
-interface ChapterByVerse {
-  verses: Verse[]
-  pagination: Pagination
-}
 
 export default function Chapter({ chapter }: { chapter: ChapterByVerse }) {
   const { verses } = chapter

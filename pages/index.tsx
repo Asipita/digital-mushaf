@@ -1,5 +1,6 @@
 import axiosInstance from '@/api'
-import ChapterList, { Chapter } from '@/components/chapter-list'
+import ChapterList from '@/components/chapter-list'
+import { Chapter } from '@/schema/interfaces'
 
 export default function Home({ chapters }: { chapters: Chapter[] }) {
   return (
