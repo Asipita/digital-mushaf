@@ -59,7 +59,7 @@ export interface ChapterByVerse {
 
 export interface Chapter {
   id: number;
-  revelation_place: string;
+  revelation_place: "makkah" | "madinah";
   revelation_order: number;
   bismillah_pre: boolean;
   name_complex: string;
