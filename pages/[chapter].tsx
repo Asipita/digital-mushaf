@@ -11,14 +11,10 @@ export default function Chapter({
 }) {
   const { verses } = chapter
   return (
-    <main className="min-h-screen flex items-center p-5 sm:p-10">
+    <main className="flex items-center p-5 sm:p-10">
       <div className="w-fit mx-auto">
         {chapterInfo.bismillah_pre && <Basmallah />}
-        <section
-          className="max-w-2xl mx-auto border-l border-r border-t"
-          dir="rtl"
-          lang="ar"
-        >
+        <section className="max-w-2xl mx-auto" dir="rtl" lang="ar">
           {verses.map((verse) => (
             <Verse
               key={verse.id}
@@ -47,7 +43,7 @@ function Basmallah() {
 
 function Verse({ text, verse_number }: { text: string; verse_number: string }) {
   return (
-    <div className="flex items-center gap-2 p-2 border-b">
+    <div className="flex items-center gap-2 p-2">
       <span className="text-lg">{text}</span>
       <span className="border p-2 rounded-full bg-slate-200 text-gray-500">
         {verse_number}
@@ -72,7 +68,9 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }: { params: any }) {
   const {
     data: { chapter },
-  } = await axiosInstance.get(`/chapters/${params.chapter}`)
+  } = await axiosInstance.get(
+    `/chapters/${params.chapter}/?fields=text_uthmani`,
+  )
 
   const { data } = await axiosInstance.get(
     `/verses/by_chapter/${params.chapter}/?fields=text_uthmani&page=1&per_page=all`,
