@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Chapter } from './chapter-list'
+import { Chapter } from '@/schema/interfaces'
 
 export function Chapter({ surah }: { surah: Chapter }) {
   const {
