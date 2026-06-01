@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --page-bg: #f8f5ef;
+  --surface: #fffdfa;
+  --surface-strong: #ffffff;
+  --ink: #26211b;
+  --muted: #746b60;
+  --line: #e8dfd1;
+  --accent: #1f6f5b;
+  --accent-soft: #dceee8;
+}
+
+[data-theme='sepia'] {
+  --page-bg: #f3ead7;
+  --surface: #fff7e6;
+  --surface-strong: #fffaf0;
+  --ink: #302417;
+  --muted: #7a6650;
+  --line: #dfcfb3;
+  --accent: #7b4f22;
+  --accent-soft: #eadbc3;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --page-bg: #131512;
+  --surface: #1e211d;
+  --surface-strong: #272b25;
+  --ink: #f3efe4;
+  --muted: #b7ad9d;
+  --line: #363b33;
+  --accent: #83c7ae;
+  --accent-soft: #263f36;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--page-bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.8), rgba(248, 245, 239, 0.94)),
+    var(--page-bg);
+  color: var(--ink);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}

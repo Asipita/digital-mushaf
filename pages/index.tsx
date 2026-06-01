@@ -1,6 +1,7 @@
 import axiosInstance from '@/api'
 import ChapterList from '@/components/chapter-list'
 import { Chapter } from '@/schema/interfaces'
+import Head from 'next/head'
 import { Reem_Kufi_Ink } from 'next/font/google'
 
 const reemKufiInk = Reem_Kufi_Ink({
@@ -10,14 +11,32 @@ const reemKufiInk = Reem_Kufi_Ink({
 
 export default function Home({ chapters }: { chapters: Chapter[] }) {
   return (
-    <main className="min-h-screen">
-      <div className="max-w-7xl mx-auto py-10 px-4 sm:px-10">
-        <h2 className={`${reemKufiInk.className} text-6xl text-center pb-10`}>
-          القرآن الکریم
-        </h2>
-        <ChapterList chapters={chapters} />
-      </div>
-    </main>
+    <>
+      <Head>
+        <title>Digital Mushaf</title>
+        <meta
+          name="description"
+          content="Browse and read the Quran in a focused digital mushaf."
+        />
+      </Head>
+
+      <main className="min-h-screen">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-8 sm:py-12">
+          <header className="mb-8 text-center">
+            <h1
+              className={`${reemKufiInk.className} text-5xl leading-tight text-[var(--accent)] sm:text-7xl`}
+            >
+              القرآن الکریم
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--muted)] sm:text-base">
+              A focused place to browse, resume, and read each surah.
+            </p>
+          </header>
+
+          <ChapterList chapters={chapters} />
+        </div>
+      </main>
+    </>
   )
 }
 
