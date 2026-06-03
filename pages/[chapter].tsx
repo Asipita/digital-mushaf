@@ -4,7 +4,7 @@ import { convertToArabic } from '@asipita/number-to-arabic'
 import Head from 'next/head'
 import { Reem_Kufi_Ink } from 'next/font/google'
 import { useRouter } from 'next/router'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChapterPickerItem } from '@/components/navbar'
 
 type ReaderTheme = 'light' | 'sepia' | 'dark'
@@ -26,6 +26,10 @@ type ActiveVerseAction = {
   verseNumber: number
   text: string
   isBookmarked: boolean
+}
+type QuranPage = {
+  pageNumber: number
+  verses: ChapterByVerse['verses']
 }
 
 const defaultSettings: ReaderSettings = {
@@ -50,19 +54,45 @@ export default function Chapter({
 }) {
   const router = useRouter()
   const { verses } = chapter
+  const quranPages = useMemo<QuranPage[]>(() => {
+    const pages = new Map<number, ChapterByVerse['verses']>()
+
+    verses.forEach((verse) => {
+      const pageVerses = pages.get(verse.page_number) ?? []
+      pageVerses.push(verse)
+      pages.set(verse.page_number, pageVerses)
+    })
+
+    return Array.from(pages.entries())
+      .sort(([pageA], [pageB]) => pageA - pageB)
+      .map(([pageNumber, pageVerses]) => ({
+        pageNumber,
+        verses: pageVerses,
+      }))
+  }, [verses])
   const [settings, setSettings] = useState<ReaderSettings>(defaultSettings)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [activeVerse, setActiveVerse] = useState(1)
+  const [currentPageNumber, setCurrentPageNumber] = useState(
+    () => quranPages[0]?.pageNumber ?? chapterInfo.pages[0] ?? 1,
+  )
   const [isCompactViewport, setIsCompactViewport] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [activeVerseAction, setActiveVerseAction] =
     useState<ActiveVerseAction | null>(null)
   const [jumpVerse, setJumpVerse] = useState('1')
-  const longPressTimer = useRef<number | null>(null)
   const revelationPlace =
     chapterInfo.revelation_place[0].toUpperCase() + chapterInfo.revelation_place.slice(1)
   const previousChapter = chapterInfo.id > 1 ? chapterInfo.id - 1 : null
   const nextChapter = chapterInfo.id < 114 ? chapterInfo.id + 1 : null
+  const currentPageIndex = quranPages.findIndex(
+    (page) => page.pageNumber === currentPageNumber,
+  )
+  const currentQuranPage =
+    quranPages[currentPageIndex] ?? quranPages[0] ?? { pageNumber: 1, verses: [] }
+  const visibleVerses = currentQuranPage.verses
+  const previousQuranPage = quranPages[currentPageIndex - 1] ?? null
+  const nextQuranPage = quranPages[currentPageIndex + 1] ?? null
   const currentBookmarks = useMemo(
     () =>
       bookmarks
@@ -107,6 +137,11 @@ export default function Chapter({
   }, [])
 
   useEffect(() => {
+    setCurrentPageNumber(quranPages[0]?.pageNumber ?? chapterInfo.pages[0] ?? 1)
+    setActiveVerse(quranPages[0]?.verses[0]?.verse_number ?? 1)
+  }, [chapterInfo.id, chapterInfo.pages, quranPages])
+
+  useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 640px)')
     const updateViewport = () => setIsCompactViewport(mediaQuery.matches)
 
@@ -138,10 +173,11 @@ export default function Chapter({
         chapterName: chapterInfo.name_complex,
         chapterArabic: chapterInfo.name_arabic,
         verseNumber: activeVerse,
+        pageNumber: currentPageNumber,
         updatedAt: new Date().toISOString(),
       }),
     )
-  }, [activeVerse, chapterInfo])
+  }, [activeVerse, chapterInfo, currentPageNumber])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -165,7 +201,7 @@ export default function Chapter({
       .forEach((element) => observer.observe(element))
 
     return () => observer.disconnect()
-  }, [chapterInfo.id])
+  }, [chapterInfo.id, currentPageNumber])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -201,10 +237,25 @@ export default function Chapter({
 
   const goToVerse = (verseNumber: number) => {
     const boundedVerse = Math.min(Math.max(verseNumber, 1), chapterInfo.verses_count)
+    const targetVerse = verses.find((verse) => verse.verse_number === boundedVerse)
+
     setJumpVerse(String(boundedVerse))
-    document
-      .getElementById(`ayah-${boundedVerse}`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (targetVerse) setCurrentPageNumber(targetVerse.page_number)
+
+    window.setTimeout(() => {
+      document
+        .getElementById(`ayah-${boundedVerse}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 80)
+  }
+
+  const goToQuranPage = (pageNumber: number) => {
+    const nextPage = quranPages.find((page) => page.pageNumber === pageNumber)
+    if (!nextPage) return
+
+    setCurrentPageNumber(nextPage.pageNumber)
+    setActiveVerse(nextPage.verses[0]?.verse_number ?? activeVerse)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const toggleBookmark = (verseNumber: number, text: string) => {
@@ -273,19 +324,6 @@ export default function Chapter({
     })
   }
 
-  const startVersePress = (verseNumber: number, text: string) => {
-    if (longPressTimer.current) window.clearTimeout(longPressTimer.current)
-    longPressTimer.current = window.setTimeout(() => {
-      openVerseActions(verseNumber, text)
-    }, 450)
-  }
-
-  const cancelVersePress = () => {
-    if (!longPressTimer.current) return
-    window.clearTimeout(longPressTimer.current)
-    longPressTimer.current = null
-  }
-
   const handleActionBookmark = () => {
     if (!activeVerseAction) return
     toggleBookmark(activeVerseAction.verseNumber, activeVerseAction.text)
@@ -343,16 +381,62 @@ export default function Chapter({
             </p>
           </header>
 
+          <nav className="mb-4 grid gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-3 shadow-sm sm:grid-cols-[auto_1fr_auto] sm:items-center">
+            <button
+              type="button"
+              disabled={!previousQuranPage}
+              onClick={() =>
+                previousQuranPage && goToQuranPage(previousQuranPage.pageNumber)
+              }
+              className="h-10 rounded-md border border-[var(--line)] px-4 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Previous page
+            </button>
+
+            <div className="grid gap-1 text-center">
+              <label className="text-xs font-medium text-[var(--muted)]">
+                Quran page
+              </label>
+              <select
+                value={currentQuranPage.pageNumber}
+                onChange={(event) => goToQuranPage(Number(event.target.value))}
+                className="mx-auto h-10 w-full max-w-xs rounded-md border border-[var(--line)] bg-[var(--surface-strong)] px-2 text-center text-sm font-semibold text-[var(--ink)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+              >
+                {quranPages.map((page, index) => (
+                  <option value={page.pageNumber} key={page.pageNumber}>
+                    Page {page.pageNumber} ({index + 1}/{quranPages.length})
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-[var(--muted)]">
+                {visibleVerses[0]?.verse_number}-
+                {visibleVerses[visibleVerses.length - 1]?.verse_number} of{' '}
+                {chapterInfo.verses_count} ayahs
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={!nextQuranPage}
+              onClick={() => nextQuranPage && goToQuranPage(nextQuranPage.pageNumber)}
+              className="h-10 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next page
+            </button>
+          </nav>
+
           <section
             className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-4 shadow-sm sm:px-8 sm:py-10"
             dir="rtl"
             lang="ar"
           >
-            {chapterInfo.bismillah_pre && <Basmallah />}
+            {chapterInfo.bismillah_pre && visibleVerses[0]?.verse_number === 1 && (
+              <Basmallah />
+            )}
 
             {settings.mode === 'line' ? (
               <div className="space-y-1 sm:space-y-3">
-                {verses.map((verse) => (
+                {visibleVerses.map((verse) => (
                   <Verse
                     key={verse.id}
                     id={`ayah-${verse.verse_number}`}
@@ -366,10 +450,9 @@ export default function Chapter({
                         bookmark.chapterId === chapterInfo.id &&
                         bookmark.verseNumber === verse.verse_number,
                     )}
-                    onPressStart={() =>
-                      startVersePress(verse.verse_number, verse.text_uthmani)
+                    onOpenActions={() =>
+                      openVerseActions(verse.verse_number, verse.text_uthmani)
                     }
-                    onPressEnd={cancelVersePress}
                   />
                 ))}
               </div>
@@ -381,7 +464,7 @@ export default function Chapter({
                   fontSize: readerFontSize,
                 }}
               >
-                {verses.map((verse) => (
+                {visibleVerses.map((verse) => (
                   <PageVerse
                     key={verse.id}
                     id={`ayah-${verse.verse_number}`}
@@ -393,10 +476,9 @@ export default function Chapter({
                         bookmark.chapterId === chapterInfo.id &&
                         bookmark.verseNumber === verse.verse_number,
                     )}
-                    onPressStart={() =>
-                      startVersePress(verse.verse_number, verse.text_uthmani)
+                    onOpenActions={() =>
+                      openVerseActions(verse.verse_number, verse.text_uthmani)
                     }
-                    onPressEnd={cancelVersePress}
                   />
                 ))}
               </div>
@@ -718,8 +800,7 @@ function Verse({
   fontSize,
   lineHeight,
   isBookmarked,
-  onPressEnd,
-  onPressStart,
+  onOpenActions,
 }: {
   id: string
   text: string
@@ -728,36 +809,31 @@ function Verse({
   fontSize: number
   lineHeight: number
   isBookmarked: boolean
-  onPressEnd: () => void
-  onPressStart: () => void
+  onOpenActions: () => void
 }) {
   return (
     <div
       id={id}
       data-verse-number={verseNumber}
-      onContextMenu={(event) => event.preventDefault()}
-      onMouseDown={onPressStart}
-      onMouseLeave={onPressEnd}
-      onMouseUp={onPressEnd}
-      onTouchCancel={onPressEnd}
-      onTouchEnd={onPressEnd}
-      onTouchStart={onPressStart}
       className="rounded-lg px-1 py-2 transition-colors target:bg-[var(--accent-soft)] sm:px-3 sm:py-3"
     >
       <p
-        className="cursor-pointer select-none text-right text-[var(--ink)]"
+        className="text-right text-[var(--ink)]"
         style={{ fontSize, lineHeight }}
       >
         {text}
-        <span
-          className={`mx-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs leading-none align-middle sm:mx-2 sm:h-9 sm:w-9 sm:text-sm ${
+        <button
+          type="button"
+          aria-label={`Actions for ayah ${verseNumber}`}
+          onClick={onOpenActions}
+          className={`mx-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs leading-none align-middle transition hover:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] sm:mx-2 sm:h-9 sm:w-9 sm:text-sm ${
             isBookmarked
               ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
               : 'border-[var(--line)] bg-[var(--surface-strong)] text-[var(--accent)]'
           }`}
         >
           {verse_number}
-        </span>
+        </button>
       </p>
     </div>
   )
@@ -769,40 +845,34 @@ function PageVerse({
   verseNumber,
   verse_number,
   isBookmarked,
-  onPressEnd,
-  onPressStart,
+  onOpenActions,
 }: {
   id: string
   text: string
   verseNumber: number
   verse_number: string
   isBookmarked: boolean
-  onPressEnd: () => void
-  onPressStart: () => void
+  onOpenActions: () => void
 }) {
   return (
     <span
       id={id}
       data-verse-number={verseNumber}
-      onContextMenu={(event) => event.preventDefault()}
-      onMouseDown={onPressStart}
-      onMouseLeave={onPressEnd}
-      onMouseUp={onPressEnd}
-      onTouchCancel={onPressEnd}
-      onTouchEnd={onPressEnd}
-      onTouchStart={onPressStart}
       className="scroll-mt-28 rounded-md target:bg-[var(--accent-soft)]"
     >
       {text}
-      <span
-        className={`mx-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs leading-none align-middle transition sm:mx-2 sm:h-9 sm:w-9 sm:text-sm ${
+      <button
+        type="button"
+        aria-label={`Actions for ayah ${verseNumber}`}
+        onClick={onOpenActions}
+        className={`mx-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs leading-none align-middle transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] sm:mx-2 sm:h-9 sm:w-9 sm:text-sm ${
           isBookmarked
             ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
             : 'border-[var(--line)] bg-[var(--surface-strong)] text-[var(--accent)] hover:border-[var(--accent)]'
         }`}
       >
         {verse_number}
-      </span>
+      </button>
     </span>
   )
 }
