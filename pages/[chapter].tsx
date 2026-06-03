@@ -29,8 +29,8 @@ type ActiveVerseAction = {
 }
 
 const defaultSettings: ReaderSettings = {
-  fontSize: 30,
-  lineHeight: 2.2,
+  fontSize: 26,
+  lineHeight: 1.55,
   theme: 'light',
   mode: 'line',
 }
@@ -53,6 +53,7 @@ export default function Chapter({
   const [settings, setSettings] = useState<ReaderSettings>(defaultSettings)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [activeVerse, setActiveVerse] = useState(1)
+  const [isCompactViewport, setIsCompactViewport] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [activeVerseAction, setActiveVerseAction] =
     useState<ActiveVerseAction | null>(null)
@@ -69,6 +70,20 @@ export default function Chapter({
         .sort((a, b) => a.verseNumber - b.verseNumber),
     [bookmarks, chapterInfo.id],
   )
+  const readerFontSize = isCompactViewport
+    ? Math.min(settings.fontSize, settings.mode === 'page' ? 25 : 26)
+    : settings.fontSize
+  const minLineHeight = 1.35
+  const maxLineHeight = isCompactViewport
+    ? settings.mode === 'page'
+      ? 1.75
+      : 1.8
+    : settings.mode === 'page'
+      ? 1.75
+      : 1.85
+  const readerLineHeight = isCompactViewport
+    ? Math.min(settings.lineHeight, maxLineHeight)
+    : Math.min(settings.lineHeight, maxLineHeight)
 
   useEffect(() => {
     const storedSettings = window.localStorage.getItem(settingsKey)
@@ -89,6 +104,16 @@ export default function Chapter({
         window.localStorage.removeItem(bookmarksKey)
       }
     }
+  }, [])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 640px)')
+    const updateViewport = () => setIsCompactViewport(mediaQuery.matches)
+
+    updateViewport()
+    mediaQuery.addEventListener('change', updateViewport)
+
+    return () => mediaQuery.removeEventListener('change', updateViewport)
   }, [])
 
   useEffect(() => {
@@ -319,14 +344,14 @@ export default function Chapter({
           </header>
 
           <section
-            className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-5 shadow-sm sm:px-8 sm:py-10"
+            className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-4 shadow-sm sm:px-8 sm:py-10"
             dir="rtl"
             lang="ar"
           >
             {chapterInfo.bismillah_pre && <Basmallah />}
 
             {settings.mode === 'line' ? (
-              <div className="space-y-3">
+              <div className="space-y-1 sm:space-y-3">
                 {verses.map((verse) => (
                   <Verse
                     key={verse.id}
@@ -334,8 +359,8 @@ export default function Chapter({
                     text={verse.text_uthmani}
                     verseNumber={verse.verse_number}
                     verse_number={convertToArabic(verse.verse_number)}
-                    fontSize={settings.fontSize}
-                    lineHeight={settings.lineHeight}
+                    fontSize={readerFontSize}
+                    lineHeight={readerLineHeight}
                     isBookmarked={bookmarks.some(
                       (bookmark) =>
                         bookmark.chapterId === chapterInfo.id &&
@@ -352,8 +377,8 @@ export default function Chapter({
               <div
                 className="text-right text-[var(--ink)]"
                 style={{
-                  fontSize: settings.fontSize,
-                  lineHeight: settings.lineHeight,
+                  lineHeight: readerLineHeight,
+                  fontSize: readerFontSize,
                 }}
               >
                 {verses.map((verse) => (
@@ -383,6 +408,9 @@ export default function Chapter({
           activeVerse={activeVerse}
           chapterInfo={chapterInfo}
           currentBookmarks={currentBookmarks}
+          lineHeightMax={maxLineHeight}
+          lineHeightMin={minLineHeight}
+          lineHeightValue={readerLineHeight}
           goToVerse={goToVerse}
           isOpen={settingsOpen}
           jumpVerse={jumpVerse}
@@ -412,7 +440,7 @@ const reemKufiInk = Reem_Kufi_Ink({
 function Basmallah() {
   return (
     <div
-      className={`${reemKufiInk.className} mb-8 mt-1 text-center text-3xl leading-relaxed text-[var(--accent)] sm:text-4xl`}
+      className={`${reemKufiInk.className} mb-5 mt-1 text-center text-2xl leading-relaxed text-[var(--accent)] sm:mb-8 sm:text-4xl`}
     >
       بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
     </div>
@@ -423,6 +451,9 @@ function SettingsOverlay({
   activeVerse,
   chapterInfo,
   currentBookmarks,
+  lineHeightMax,
+  lineHeightMin,
+  lineHeightValue,
   goToVerse,
   isOpen,
   jumpVerse,
@@ -434,6 +465,9 @@ function SettingsOverlay({
   activeVerse: number
   chapterInfo: Chapter
   currentBookmarks: Bookmark[]
+  lineHeightMax: number
+  lineHeightMin: number
+  lineHeightValue: number
   goToVerse: (verseNumber: number) => void
   isOpen: boolean
   jumpVerse: string
@@ -521,8 +555,8 @@ function SettingsOverlay({
               </span>
               <input
                 type="range"
-                min="24"
-                max="42"
+                min="20"
+                max="36"
                 value={settings.fontSize}
                 onChange={(event) =>
                   updateSettings({ fontSize: Number(event.target.value) })
@@ -534,14 +568,14 @@ function SettingsOverlay({
             <label className="block">
               <span className="flex items-center justify-between text-xs font-medium text-[var(--muted)]">
                 <span>Line height</span>
-                <span>{settings.lineHeight.toFixed(1)}</span>
+                <span>{lineHeightValue.toFixed(2)}</span>
               </span>
               <input
                 type="range"
-                min="1.7"
-                max="2.8"
-                step="0.1"
-                value={settings.lineHeight}
+                min={lineHeightMin}
+                max={lineHeightMax}
+                step="0.05"
+                value={lineHeightValue}
                 onChange={(event) =>
                   updateSettings({ lineHeight: Number(event.target.value) })
                 }
@@ -556,7 +590,7 @@ function SettingsOverlay({
               goToVerse(Number(jumpVerse))
               setIsOpen(false)
             }}
-            className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-3"
+            className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-3"
           >
             <label>
               <span className="text-xs font-medium text-[var(--muted)]">
@@ -574,7 +608,7 @@ function SettingsOverlay({
             </label>
             <button
               type="submit"
-              className="mt-5 h-10 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white"
+              className="h-10 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white"
             >
               Go
             </button>
@@ -708,7 +742,7 @@ function Verse({
       onTouchCancel={onPressEnd}
       onTouchEnd={onPressEnd}
       onTouchStart={onPressStart}
-      className="rounded-lg px-1 py-3 transition-colors target:bg-[var(--accent-soft)] sm:px-3"
+      className="rounded-lg px-1 py-2 transition-colors target:bg-[var(--accent-soft)] sm:px-3 sm:py-3"
     >
       <p
         className="cursor-pointer select-none text-right text-[var(--ink)]"
@@ -716,7 +750,7 @@ function Verse({
       >
         {text}
         <span
-          className={`mx-2 inline-flex h-9 w-9 items-center justify-center rounded-full border text-sm leading-none align-middle ${
+          className={`mx-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs leading-none align-middle sm:mx-2 sm:h-9 sm:w-9 sm:text-sm ${
             isBookmarked
               ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
               : 'border-[var(--line)] bg-[var(--surface-strong)] text-[var(--accent)]'
@@ -761,7 +795,7 @@ function PageVerse({
     >
       {text}
       <span
-        className={`mx-2 inline-flex h-9 w-9 items-center justify-center rounded-full border text-sm leading-none align-middle transition ${
+        className={`mx-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs leading-none align-middle transition sm:mx-2 sm:h-9 sm:w-9 sm:text-sm ${
           isBookmarked
             ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
             : 'border-[var(--line)] bg-[var(--surface-strong)] text-[var(--accent)] hover:border-[var(--accent)]'
