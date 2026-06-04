@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Digital Mushaf Quran reader preview">
+  <rect width="1200" height="630" fill="#f7f2e8"/>
+  <rect x="56" y="56" width="1088" height="518" rx="28" fill="#fffaf0" stroke="#d9cdb8" stroke-width="2"/>
+  <rect x="104" y="104" width="324" height="422" rx="18" fill="#1f6f5b"/>
+  <path d="M160 160h128c52 0 94 42 94 94v190H242c-45 0-82-37-82-82V160Z" fill="#f7f2e8"/>
+  <path d="M218 200h92c25 0 46 21 46 46v128h-84c-36 0-66-30-66-66V200Z" fill="none" stroke="#1f6f5b" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M266 198v180" stroke="#1f6f5b" stroke-width="12" stroke-linecap="round"/>
+  <path d="M298 268h52M298 316h52" stroke="#1f6f5b" stroke-width="10" stroke-linecap="round"/>
+  <text x="500" y="206" fill="#1f6f5b" font-family="Georgia" font-size="68" font-weight="700">Digital Mushaf</text>
+  <text x="500" y="286" fill="#3f4c45" font-family="Arial" font-size="32">A focused place to browse, resume, and read each surah.</text>
+  <text x="500" y="396" fill="#1f6f5b" font-family="Georgia" font-size="72" direction="rtl" unicode-bidi="bidi-override">القرآن الکریم</text>
+  <rect x="500" y="458" width="320" height="52" rx="26" fill="#e5efe9"/>
+  <text x="534" y="493" fill="#1f6f5b" font-family="Arial" font-size="22" font-weight="700">Read Quran online</text>
+</svg>

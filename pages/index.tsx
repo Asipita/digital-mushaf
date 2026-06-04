@@ -1,7 +1,7 @@
 import axiosInstance from '@/api'
 import ChapterList from '@/components/chapter-list'
+import { Seo } from '@/components/seo'
 import { Chapter } from '@/schema/interfaces'
-import Head from 'next/head'
 import { Reem_Kufi_Ink } from 'next/font/google'
 
 const reemKufiInk = Reem_Kufi_Ink({
@@ -12,13 +12,7 @@ const reemKufiInk = Reem_Kufi_Ink({
 export default function Home({ chapters }: { chapters: Chapter[] }) {
   return (
     <>
-      <Head>
-        <title>Digital Mushaf</title>
-        <meta
-          name="description"
-          content="Browse and read the Quran in a focused digital mushaf."
-        />
-      </Head>
+      <Seo />
 
       <main className="min-h-screen">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-8 sm:py-12">

@@ -1,0 +1,20 @@
+{
+  "name": "Digital Mushaf",
+  "short_name": "Mushaf",
+  "description": "Browse, resume, and read the Quran in a focused digital mushaf.",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#1f6f5b",
+  "background_color": "#f7f2e8",
+  "display": "standalone"
+}

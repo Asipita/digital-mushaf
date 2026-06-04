@@ -1,7 +1,7 @@
 import axiosInstance from '@/api'
+import { Seo } from '@/components/seo'
 import { Chapter, ChapterByVerse } from '@/schema/interfaces'
 import { convertToArabic } from '@asipita/number-to-arabic'
-import Head from 'next/head'
 import { Reem_Kufi_Ink } from 'next/font/google'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
@@ -344,13 +344,12 @@ export default function Chapter({
 
   return (
     <>
-      <Head>
-        <title>{`${chapterInfo.name_complex} | Digital Mushaf`}</title>
-        <meta
-          name="description"
-          content={`Read ${chapterInfo.name_complex}, ${chapterInfo.translated_name.name}, in Arabic.`}
-        />
-      </Head>
+      <Seo
+        title={`${chapterInfo.name_complex} (${chapterInfo.translated_name.name})`}
+        description={`Read Surah ${chapterInfo.name_complex}, ${chapterInfo.translated_name.name}, in Arabic with standard Quran page navigation.`}
+        path={`/${chapterInfo.id}`}
+        type="article"
+      />
 
       <main className="px-3 py-4 sm:px-6 sm:py-10">
         <article className="mx-auto max-w-4xl">
